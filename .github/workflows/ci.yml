@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint (ruff)
+        run: |
+          pip install ruff
+          ruff check .
+      - name: Run tests
+        run: |
+          pip install pytest pytest-django
+          pytest -q
+
+  build-and-deploy:
+    needs: lint-test-build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: |
+          docker build -t aldovale-ai-mvp:latest .
+      - name: Deploy to Railway (placeholder)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
+        run: |
+          echo "This job assumes you've added RAILWAY_TOKEN and RAILWAY_PROJECT_ID to GitHub Secrets."
+          echo "Add a deploy script or Railway CLI commands here."

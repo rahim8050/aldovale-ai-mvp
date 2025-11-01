@@ -1,0 +1,122 @@
+# =====================================
+# === PYTHON / DJANGO BACKEND ===
+# =====================================
+
+# Byte-compiled / optimized files
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.pdb
+*.log
+*.pot
+*.py,cover
+*.cover
+*.swp
+*.swo
+*.swn
+*.seed
+*.pid
+*.pid.lock
+
+# Virtual environments
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+
+# Local database
+*.sqlite3
+*.db
+
+# Django-specific
+local_settings.py
+settings_local.py
+secrets.json
+config.json
+*.key
+*.pem
+*.crt
+
+# Environment configuration
+.env
+.env.*
+!.env.example  # Keep a clean example file for other devs
+
+# Collected static files and uploads
+staticfiles/
+media/
+
+# Migrations cache only
+*/migrations/__pycache__/
+
+# =====================================
+# === FRONTEND (Vite + Vue 3 + Tailwind) ===
+# =====================================
+
+# Node environment
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite cache and build output
+dist/
+.vite/
+vite.config.local.js
+
+# Local build cache
+.cache/
+.temp/
+.tmp/
+.turbo/
+
+# Lock files (optional — only ignore if not using one consistently)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Editor environment for frontend
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# =====================================
+# === TESTING & COVERAGE ===
+# =====================================
+
+.tox/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+nosetests.xml
+coverage.xml
+.junit.xml
+coverage/
+reports/
+
+# =====================================
+# === OS / MISC ===
+# =====================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary or backup files
+*.bak
+*.tmp
+*.orig
+*.rej
+*~
