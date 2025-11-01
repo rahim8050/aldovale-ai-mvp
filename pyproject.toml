@@ -6,5 +6,20 @@ build-backend = "setuptools.build_meta"
 line-length = 88
 
 [tool.ruff]
-target-version = ["py39"]
+target-version = "py39"
+exclude = ["migrations", ".venv", "build", "dist"]
+
+[tool.ruff.lint]
 select = ["E", "F", "W", "C", "S"]
+ignore = ["E501"]  # let Black handle line length
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"apps/core/tests/*" = ["S101"]
+
+[tool.mypy]
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "aldovale.settings"
