@@ -25,6 +25,9 @@ repos:
           - djangorestframework-stubs
           - djangorestframework-simplejwt
           - psycopg2-binary
+          - dj_database_url
+          - pymysql
+          - types-PyMySQL
         args:
           - --explicit-package-bases
           - --ignore-missing-imports
