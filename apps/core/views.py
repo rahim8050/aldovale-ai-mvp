@@ -1,85 +1,72 @@
-from rest_framework.views import APIView
+from rest_framework.decorators import api_view
+from rest_framework.request import Request
 from rest_framework.response import Response
-from rest_framework import status, permissions
-from .models import Client, Session, Conversation
-from .serializers import (
-    SessionCreateSerializer,
-    IngestSerializer,
-)
-import jwt
-import os
-import uuid
+from rest_framework import status
+from apps.core.models import Client, Session
+from apps.core.serializers import SessionCreateSerializer, IngestSerializer
+from apps.core.utils import generate_jwt
 
 
-# Simple token exchange endpoint (dev-only)
-class TokenExchangeView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        api_key = request.data.get("api_key")
-        if not api_key:
-            return Response(
-                {"detail": "api_key required"}, status=status.HTTP_400_BAD_REQUEST
-            )
-        # In prod: verify hashed api_key against DB
-        payload = {"jti": str(uuid.uuid4())}
-        token = jwt.encode(
-            payload, os.getenv("SECRET_KEY", "replace-me"), algorithm="HS256"
-        )
-        return Response({"jwt": token})
-
-
-class SessionCreateView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        serializer = SessionCreateSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        client_id = serializer.validated_data["client_id"]
-        try:
-            client = Client.objects.get(id=client_id)
-        except Client.DoesNotExist:
-            return Response(
-                {"detail": "client not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-        session = Session.objects.create(client=client, jwt_jti=str(uuid.uuid4()))
-        return Response({"session_id": str(session.id), "jwt": "dev-jwt-placeholder"})
-
-
-class ChatMessageView(APIView):
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        session_id = request.data.get("session_id")
-        message = request.data.get("message")
-        if not session_id or not message:
-            return Response(
-                {"detail": "session_id and message required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-        try:
-            session = Session.objects.get(id=session_id)
-        except Session.DoesNotExist:
-            return Response(
-                {"detail": "session not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-        # Simple echo / placeholder LLM call
-        conv = Conversation.objects.create(
-            session=session,
-            client=session.client,
-            user_message=message,
-            bot_reply=f"Echo: {message}",
-        )
+@api_view(["POST"])
+def token_exchange(request: Request) -> Response:
+    api_key = request.data.get("api_key")
+    if not api_key:
         return Response(
-            {"reply": conv.bot_reply, "sources": [], "ticket_created": False}
+            {"detail": "Missing API key."}, status=status.HTTP_400_BAD_REQUEST
         )
 
+    client = Client.objects.filter(api_key_hash=api_key).first()
+    if not client:
+        return Response(
+            {"detail": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED
+        )
 
-class AdminIngestView(APIView):
-    permission_classes = [permissions.IsAdminUser]
+    jwt_token = generate_jwt(client)
+    return Response({"jwt": jwt_token}, status=status.HTTP_200_OK)
 
-    def post(self, request):
-        serializer = IngestSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        # store file and enqueue ingestion job in real product
-        return Response({"detail": "file received"}, status=status.HTTP_202_ACCEPTED)
+
+@api_view(["POST"])
+def session_create(request: Request) -> Response:
+    serializer = SessionCreateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    session = serializer.save()
+    return Response(
+        {"session_id": str(session.id), "client": session.client.name},
+        status=status.HTTP_201_CREATED,
+    )
+
+
+@api_view(["POST"])
+def chat_message(request: Request) -> Response:
+    session_id = request.data.get("session_id")
+    message = request.data.get("message")
+
+    if not session_id or not message:
+        return Response(
+            {"detail": "Missing session_id or message."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    try:
+        session = Session.objects.get(id=session_id)
+    except Session.DoesNotExist:
+        return Response(
+            {"detail": "Session not found."}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    reply = f"Echo: {message}"
+    return Response(
+        {"reply": reply, "session": str(session.id)}, status=status.HTTP_200_OK
+    )
+
+
+@api_view(["POST"])
+def ingest_data(request: Request) -> Response:
+    serializer = IngestSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer.save()
+    return Response({"status": "success"}, status=status.HTTP_201_CREATED)

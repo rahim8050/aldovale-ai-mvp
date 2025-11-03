@@ -11,7 +11,7 @@ exclude = ["migrations", ".venv", "build", "dist"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "C", "S"]
-ignore = ["E501"]  # let Black handle line length
+ignore = ["E501"]  # Black enforces line length
 fixable = ["ALL"]
 unfixable = []
 
@@ -19,7 +19,37 @@ unfixable = []
 "apps/core/tests/*" = ["S101"]
 
 [tool.mypy]
-plugins = ["mypy_django_plugin.main"]
+python_version = "3.11"
+plugins = ["django_stubs_ext"]
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_return_any = true
+warn_unreachable = true
+strict_equality = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true
+show_error_codes = true
+pretty = true
+ignore_missing_imports = false
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = "rest_framework.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "PyMySQL.*"
+ignore_missing_imports = false
+
+[[tool.mypy.overrides]]
+module = "apps.core.tests.*"
+disable_error_code = ["misc"]
+disallow_untyped_defs = false
+check_untyped_defs = true
 
 [tool.django-stubs]
 django_settings_module = "aldovale.settings"

@@ -1,14 +1,9 @@
 from django.urls import path
-from .views import (
-    TokenExchangeView,
-    SessionCreateView,
-    ChatMessageView,
-    AdminIngestView,
-)
+from . import views
 
 urlpatterns = [
-    path("auth/token/", TokenExchangeView.as_view(), name="token-exchange"),
-    path("chat/session/", SessionCreateView.as_view(), name="session-create"),
-    path("chat/message/", ChatMessageView.as_view(), name="chat-message"),
-    path("admin/ingest/", AdminIngestView.as_view(), name="admin-ingest"),
+    path("auth/token/", views.token_exchange, name="token-exchange"),
+    path("chat/session/", views.session_create, name="session-create"),
+    path("chat/message/", views.chat_message, name="chat-message"),
+    path("admin/ingest/", views.ingest_data, name="admin-ingest"),
 ]
