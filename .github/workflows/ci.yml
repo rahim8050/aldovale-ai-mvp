@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
@@ -8,39 +8,91 @@ on:
 
 jobs:
   lint-test-build:
+    name: Lint, Type Check, Test, and Docs Validation
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: "3.11"
+
+      - name: Cache pip dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-      - name: Lint (ruff)
+          pip install ruff mypy bandit pytest pytest-django pytest-cov \
+            drf-spectacular mkdocs mkdocs-material mkdocs-include-markdown-plugin
+
+      - name: Lint (Ruff)
+        run: ruff check .
+
+      - name: Type Check (MyPy)
+        run: mypy --strict .
+
+      - name: Security Scan (Bandit)
+        run: bandit -r apps -x apps/tests
+
+      - name: Run Tests with Coverage
         run: |
-          pip install ruff
-          ruff check .
-      - name: Run tests
-        run: |
-          pip install pytest pytest-django
-          pytest -q
+          pytest --disable-warnings --cov=apps --cov-report=xml --cov-report=term-missing
+
+      - name: Upload Coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          flags: unittests
+          name: aldovale-ai-mvp
+          fail_ci_if_error: true
+
+      - name: Generate OpenAPI Schema
+        run: python manage.py spectacular --file docs/openapi-schema.yml
+
+      - name: Validate MkDocs Build
+        run: mkdocs build --strict
 
   build-and-deploy:
+    name: Build & Deploy
     needs: lint-test-build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && success()
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build Docker image
+        run: docker build -t aldovale-ai-mvp:latest .
+
+      - name: Login to Docker Hub (optional)
+        if: env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
         run: |
-          docker build -t aldovale-ai-mvp:latest .
-      - name: Deploy to Railway (placeholder)
+          echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+          docker tag aldovale-ai-mvp:latest ${DOCKER_USERNAME}/aldovale-ai-mvp:latest
+          docker push ${DOCKER_USERNAME}/aldovale-ai-mvp:latest
+
+      - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
         run: |
-          echo "This job assumes you've added RAILWAY_TOKEN and RAILWAY_PROJECT_ID to GitHub Secrets."
-          echo "Add a deploy script or Railway CLI commands here."
+          npm install -g @railway/cli
+          railway up --service aldovale-ai-mvp --yes

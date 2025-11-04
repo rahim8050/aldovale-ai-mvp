@@ -27,6 +27,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework_simplejwt",
+    "drf_spectacular",
+    "drf_spectacular_sidecar",
     "apps.core",
 ]
 
@@ -92,6 +94,7 @@ if IS_TEST:
 
 
 REST_FRAMEWORK = {
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
@@ -107,6 +110,15 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ),
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Aldovale AI API",
+    "DESCRIPTION": "Backend API documentation for Aldovale AI — secure, scalable, and production-ready.",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SERVE_AUTHENTICATION": [],  # disable for public docs if desired
+    "SERVE_PERMISSIONS": [],  # adjust for internal access
 }
 
 STATIC_URL = "/static/"

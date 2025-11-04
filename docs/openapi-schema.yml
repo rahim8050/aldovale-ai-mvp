@@ -1,0 +1,60 @@
+openapi: 3.0.3
+info:
+  title: Aldovale AI API
+  version: 1.0.0
+  description: Backend API documentation for Aldovale AI — secure, scalable, and production-ready.
+paths:
+  /api/v1/admin/ingest/:
+    post:
+      operationId: admin_ingest_create
+      tags:
+      - admin
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/auth/token/:
+    post:
+      operationId: auth_token_create
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/chat/message/:
+    post:
+      operationId: chat_message_create
+      tags:
+      - chat
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/v1/chat/session/:
+    post:
+      operationId: chat_session_create
+      tags:
+      - chat
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

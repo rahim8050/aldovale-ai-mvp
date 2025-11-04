@@ -29,6 +29,8 @@ repos:
           - dj_database_url
           - pymysql
           - types-PyMySQL
+          - drf_spectacular
+          - drf_spectacular-sidecar
         args:
           - --explicit-package-bases
           - --ignore-missing-imports
