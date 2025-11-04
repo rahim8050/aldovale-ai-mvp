@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-# Prevent overlapping runs on the same branch
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -18,15 +17,15 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4.8.0
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Cache pip dependencies
-        uses: actions/cache@v4.1.1
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
@@ -39,7 +38,7 @@ jobs:
           pip install -r requirements.txt -r requirements-dev.txt
 
       - name: Cache MyPy cache
-        uses: actions/cache@v4.1.1
+        uses: actions/cache@v4
         with:
           path: .mypy_cache
           key: mypy-${{ runner.os }}-${{ hashFiles('**/*.py') }}
@@ -61,7 +60,7 @@ jobs:
                  --cov-report=term-missing --cov-fail-under=85
 
       - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v4.3.1
+        uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -86,13 +85,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4.1.2
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3.5.0
+        uses: docker/setup-buildx-action@v3
 
       - name: Cache Docker layers
-        uses: actions/cache@v4.1.1
+        uses: actions/cache@v4
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -104,7 +103,7 @@ jobs:
 
       - name: Login to Docker Hub
         if: env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
-        uses: docker/login-action@v3.2.0
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
