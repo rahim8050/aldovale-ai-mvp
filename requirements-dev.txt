@@ -1,0 +1,41 @@
+Django==5.2.7
+djangorestframework==3.16.1
+drf-spectacular==0.29.0
+drf-spectacular-sidecar==2025.10.1
+django-stubs==5.2.7
+django-stubs-ext==5.2.7
+djangorestframework-stubs==3.16.5
+psycopg2-binary==2.9.11
+redis==5.2.1
+celery==5.5.3
+gunicorn==23.0.0
+whitenoise==6.8.2
+python-dotenv==1.2.1
+
+# Dev & typing
+mypy==1.18.2
+ruff==0.14.3
+black==24.10.0
+bandit==1.8.0
+pytest==8.4.2
+pytest-django==4.11.1
+pytest-mypy-plugins==3.2.0
+pre_commit==4.3.0
+types-PyYAML==6.0.12.20250915
+types-PyMySQL==1.1.0.20250916
+types-requests==2.32.4.20250913
+
+# Docs
+mkdocs==1.6.1
+mkdocs-material==9.6.23
+mkdocs-minify-plugin==0.8.0
+mkdocs-git-revision-date-localized-plugin==1.5.0
+mkdocs-awesome-pages-plugin==2.10.1
+
+# Utility
+requests==2.32.5
+urllib3==2.5.0
+certifi==2025.10.5
+idna==3.11
+click==8.3.0
+colorama==0.4.6
