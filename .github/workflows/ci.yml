@@ -52,7 +52,8 @@ jobs:
         run: mypy --strict .
 
       - name: Security Scan (Bandit)
-        run: bandit -r apps -x apps/tests,apps/*/migrations skip:B101
+        run: bandit -r apps -x "apps/tests,apps/*/migrations" --skip B101
+
 
       - name: Run Tests with Coverage
         run: |
