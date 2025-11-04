@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [ main ]
 
+# Prevent overlapping runs on the same branch
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint-test-build:
     name: Lint, Type Check, Test, and Docs Validation
@@ -13,27 +18,33 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.2
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v4.8.0
         with:
           python-version: "3.11"
 
       - name: Cache pip dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v4.1.1
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install ruff mypy bandit pytest pytest-django pytest-cov \
-            drf-spectacular mkdocs mkdocs-material mkdocs-include-markdown-plugin
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Cache MyPy cache
+        uses: actions/cache@v4.1.1
+        with:
+          path: .mypy_cache
+          key: mypy-${{ runner.os }}-${{ hashFiles('**/*.py') }}
+          restore-keys: |
+            mypy-${{ runner.os }}-
 
       - name: Lint (Ruff)
         run: ruff check .
@@ -42,14 +53,15 @@ jobs:
         run: mypy --strict .
 
       - name: Security Scan (Bandit)
-        run: bandit -r apps -x apps/tests
+        run: bandit -r apps -x apps/tests,apps/*/migrations
 
       - name: Run Tests with Coverage
         run: |
-          pytest --disable-warnings --cov=apps --cov-report=xml --cov-report=term-missing
+          pytest --disable-warnings --cov=apps --cov-report=xml \
+                 --cov-report=term-missing --cov-fail-under=85
 
       - name: Upload Coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v4.3.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage.xml
@@ -59,6 +71,9 @@ jobs:
 
       - name: Generate OpenAPI Schema
         run: python manage.py spectacular --file docs/openapi-schema.yml
+
+      - name: Verify OpenAPI Schema
+        run: test -f docs/openapi-schema.yml
 
       - name: Validate MkDocs Build
         run: mkdocs build --strict
@@ -71,21 +86,32 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4.1.2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v3.5.0
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4.1.1
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
       - name: Build Docker image
         run: docker build -t aldovale-ai-mvp:latest .
 
-      - name: Login to Docker Hub (optional)
+      - name: Login to Docker Hub
         if: env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
-        env:
-          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+        uses: docker/login-action@v3.2.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push Docker image
+        if: env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
         run: |
-          echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
           docker tag aldovale-ai-mvp:latest ${DOCKER_USERNAME}/aldovale-ai-mvp:latest
           docker push ${DOCKER_USERNAME}/aldovale-ai-mvp:latest
 
@@ -94,5 +120,5 @@ jobs:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
         run: |
-          npm install -g @railway/cli
+          npm install -g @railway/cli@3.15.0
           railway up --service aldovale-ai-mvp --yes
