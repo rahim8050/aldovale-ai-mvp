@@ -5,7 +5,7 @@ from rest_framework.test import APIClient
 from apps.core.models import Client, Session
 
 
-@pytest.mark.django_db  # type: ignore[misc]
+@pytest.mark.django_db
 def test_chat_message_flow(api_client_with_auth: APIClient) -> None:
     """
     Tests the chat message flow endpoint with authenticated client.

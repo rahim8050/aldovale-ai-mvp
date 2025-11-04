@@ -12,7 +12,7 @@ def pytest_configure() -> None:
     django.setup()
 
 
-@pytest.fixture  # type: ignore[misc]
+@pytest.fixture
 def user(db: Any) -> User:
     """
     Creates and returns a test user.
@@ -21,7 +21,7 @@ def user(db: Any) -> User:
     return User.objects.create_user(username="testuser", password=test_password)
 
 
-@pytest.fixture  # type: ignore[misc]
+@pytest.fixture
 def api_client_with_auth(user: User) -> APIClient:
     """
     Returns an APIClient instance authenticated with JWT for the given user.

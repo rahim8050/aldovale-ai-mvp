@@ -6,7 +6,7 @@ from apps.core.models import Client
 import hashlib
 
 
-@pytest.mark.django_db  # type: ignore[misc]
+@pytest.mark.django_db
 def test_token_exchange_success(api_client: APIClient) -> None:
     """
     Test that token exchange endpoint returns a valid JWT token

@@ -17,23 +17,22 @@ repos:
     rev: v1.18.2
     hooks:
       - id: mypy
-        args: ["--config-file", "mypy.ini"]
+        args:
+          - --config-file=mypy.ini
+          - --explicit-package-bases
+          - --ignore-missing-imports
         additional_dependencies:
           - django-stubs
           - djangorestframework-stubs
-          -  python-dotenv
+          - python-dotenv
           - djangorestframework
-          - djangorestframework-stubs
           - djangorestframework-simplejwt
           - psycopg2-binary
-          - dj_database_url
+          - dj-database-url
           - pymysql
           - types-PyMySQL
-          - drf_spectacular
-          - drf_spectacular-sidecar
-        args:
-          - --explicit-package-bases
-          - --ignore-missing-imports
+          - drf-spectacular
+          - drf-spectacular-sidecar
         exclude: ^(venv/|migrations/|tests/)
 
   - repo: https://github.com/PyCQA/bandit

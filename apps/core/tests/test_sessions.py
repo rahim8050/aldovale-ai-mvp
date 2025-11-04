@@ -5,7 +5,7 @@ from rest_framework.test import APIClient
 from apps.core.models import Client
 
 
-@pytest.mark.django_db  # type: ignore[misc]
+@pytest.mark.django_db
 def test_session_create(api_client_with_auth: APIClient) -> None:
     """
     Test creating a session for a client returns a valid session ID and JWT token.
