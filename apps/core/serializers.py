@@ -14,7 +14,7 @@ class ClientSerializer(serializers.ModelSerializer[Client]):
 class SessionCreateSerializer(serializers.Serializer):
     client_id = serializers.UUIDField()
 
-    def create(self, validated_data: Dict[str, Any]) -> Dict[str, Any]:
+    def create(self, validated_data: Dict[str, Any]) -> Session:
         client_id = validated_data["client_id"]
 
         try:
@@ -22,12 +22,11 @@ class SessionCreateSerializer(serializers.Serializer):
         except Client.DoesNotExist:
             raise serializers.ValidationError("Client does not exist")
 
-        jwt_jti = str(uuid.uuid4())  # generate unique identifier
+        jwt_jti = str(uuid.uuid4())
 
         session = Session.objects.create(client=client, jwt_jti=jwt_jti)
 
-        # Return dictionary with session info to satisfy DRF's expected return type
-        return {"id": session.id, "client": client}
+        return session
 
 
 class ConversationSerializer(serializers.ModelSerializer[Conversation]):
