@@ -11,6 +11,10 @@ class Client(models.Model):
     config = models.JSONField(default=dict)
     created_at = models.DateTimeField(default=timezone.now)
 
+    @property
+    def is_authenticated(self) -> bool:
+        return True
+
 
 class Session(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

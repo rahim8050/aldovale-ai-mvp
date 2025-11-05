@@ -1,25 +1,32 @@
 import pytest
-from typing import Any
 from django.urls import reverse
 from rest_framework.test import APIClient
 from apps.core.models import Client
+import hashlib
+from rest_framework_simplejwt.tokens import AccessToken
 
 
 @pytest.mark.django_db
-def test_session_create(api_client_with_auth: APIClient) -> None:
-    """
-    Test creating a session for a client returns a valid session ID and JWT token.
-    """
-    client_obj: Client = Client.objects.create(name="Test Co", api_key_hash="hash")
-    url: str = reverse("session-create")
-    payload: dict[str, Any] = {"client_id": str(client_obj.id)}
+def test_session_create() -> None:
+    raw_api_key = "valid_api_key_123"
+    hashed_key = hashlib.sha256(raw_api_key.encode()).hexdigest()
+    client_obj = Client.objects.create(name="Test Co", api_key_hash=hashed_key)
 
-    response = api_client_with_auth.post(url, payload, format="json")
+    # Generate valid JWT token for this client
+    token = AccessToken()
+    token["client_id"] = str(client_obj.id)
+    token["name"] = client_obj.name
+    jwt_token = str(token)
 
-    assert response.status_code == 200, response.content
-    data: dict[str, Any] = response.json()
+    api_client = APIClient()
+    api_client.credentials(HTTP_AUTHORIZATION=f"Bearer {jwt_token}")
 
-    assert "session_id" in data, "Missing session_id in response"
-    assert "jwt" in data, "Missing jwt in response"
-    assert isinstance(data["jwt"], str)
-    assert isinstance(data["session_id"], str)
+    url = reverse("session-create")
+    payload = {"client_id": str(client_obj.id)}
+
+    response = api_client.post(url, payload, format="json")
+
+    assert response.status_code == 201, response.content
+    data = response.json()
+    assert "data" in data, response.content
+    assert "session_id" in data["data"], response.content

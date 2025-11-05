@@ -1,22 +1,16 @@
-from typing import Any
-import jwt
-import uuid
-import os
+from typing import Optional
+from datetime import timedelta
+from rest_framework_simplejwt.tokens import AccessToken
 from apps.core.models import Client
 
 
-def generate_jwt(client: Client | None = None) -> str:
-    secret = os.getenv("SECRET_KEY", "replace-me")
-    payload: dict[str, Any] = {}
+def generate_jwt(client: Optional[Client] = None) -> str:
+    token = AccessToken()
+    token.set_exp(lifetime=timedelta(minutes=5))  # set expiry as needed
 
-    if client is not None:
-        payload = {
-            "client_id": str(client.id),
-            "name": client.name,
-            # add other claims as needed
-        }
+    if client:
+        token["client_id"] = str(client.id)
+        token["name"] = client.name
+        # add other custom claims here if needed
 
-    payload["jti"] = str(uuid.uuid4())
-
-    token = jwt.encode(payload, secret, algorithm="HS256")
-    return token
+    return str(token)

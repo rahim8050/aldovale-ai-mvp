@@ -4,7 +4,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from apps.core.models import Client, Session
 from apps.core.serializers import SessionCreateSerializer, IngestSerializer
-from apps.core.utils import generate_jwt
+from rest_framework_simplejwt.tokens import AccessToken
+import hashlib
+
+
+def generate_test_jwt_for_client(client: Client) -> str:
+    token = AccessToken()
+    # Custom claims — adapt as needed
+    token["client_id"] = str(client.id)
+    token["name"] = client.name
+    return str(token)
 
 
 @api_view(["POST"])
@@ -15,14 +24,22 @@ def token_exchange(request: Request) -> Response:
             {"detail": "Missing API key."}, status=status.HTTP_400_BAD_REQUEST
         )
 
-    client = Client.objects.filter(api_key_hash=api_key).first()
+    hashed_key = hashlib.sha256(api_key.encode()).hexdigest()
+    client = Client.objects.filter(api_key_hash=hashed_key).first()
     if not client:
         return Response(
             {"detail": "Invalid API key."}, status=status.HTTP_401_UNAUTHORIZED
         )
 
-    jwt_token = generate_jwt(client)
-    return Response({"jwt": jwt_token}, status=status.HTTP_200_OK)
+    # Generate JWT token using SimpleJWT AccessToken or your generate_jwt util
+    # For simplicity:
+    from rest_framework_simplejwt.tokens import AccessToken
+
+    token = AccessToken()
+    token["client_id"] = str(client.id)
+    token["name"] = client.name
+
+    return Response({"jwt": str(token)}, status=status.HTTP_200_OK)
 
 
 @api_view(["POST"])
