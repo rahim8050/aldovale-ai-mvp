@@ -2,6 +2,7 @@ from rest_framework import serializers
 from typing import Any
 from .models import Client, Conversation, Session
 import uuid
+from typing import Dict
 
 
 class ClientSerializer(serializers.ModelSerializer[Client]):
@@ -13,7 +14,7 @@ class ClientSerializer(serializers.ModelSerializer[Client]):
 class SessionCreateSerializer(serializers.Serializer):
     client_id = serializers.UUIDField()
 
-    def create(self, validated_data: dict[str, Any]) -> Session:
+    def create(self, validated_data: Dict[str, Any]) -> Dict[str, Any]:
         client_id = validated_data["client_id"]
 
         try:
@@ -24,7 +25,9 @@ class SessionCreateSerializer(serializers.Serializer):
         jwt_jti = str(uuid.uuid4())  # generate unique identifier
 
         session = Session.objects.create(client=client, jwt_jti=jwt_jti)
-        return session
+
+        # Return dictionary with session info to satisfy DRF's expected return type
+        return {"id": session.id, "client": client}
 
 
 class ConversationSerializer(serializers.ModelSerializer[Conversation]):
