@@ -6,6 +6,8 @@ from apps.core.models import Client, Session
 from apps.core.serializers import SessionCreateSerializer, IngestSerializer
 from rest_framework_simplejwt.tokens import AccessToken
 import hashlib
+import uuid
+from typing import Dict, Any
 
 
 def generate_test_jwt_for_client(client: Client) -> str:
@@ -48,7 +50,19 @@ def session_create(request: Request) -> Response:
     if not serializer.is_valid():
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    session = serializer.save()
+    validated_data: Dict[str, Any] = serializer.save()
+    client_id = validated_data["client_id"]
+
+    try:
+        client = Client.objects.get(id=client_id)
+    except Client.DoesNotExist:
+        return Response(
+            {"detail": "Client does not exist"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    jwt_jti = str(uuid.uuid4())
+    session = Session.objects.create(client=client, jwt_jti=jwt_jti)
+
     return Response(
         {"session_id": str(session.id), "client": session.client.name},
         status=status.HTTP_201_CREATED,

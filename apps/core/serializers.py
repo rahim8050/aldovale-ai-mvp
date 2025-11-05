@@ -1,8 +1,6 @@
 from rest_framework import serializers
-from typing import Any
-from .models import Client, Conversation, Session
-import uuid
-from typing import Dict
+from typing import Any, Dict
+from .models import Client, Conversation
 
 
 class ClientSerializer(serializers.ModelSerializer[Client]):
@@ -11,22 +9,13 @@ class ClientSerializer(serializers.ModelSerializer[Client]):
         fields = ["id", "name", "webhook_url", "config"]
 
 
-class SessionCreateSerializer(serializers.Serializer):
+class SessionCreateSerializer(serializers.Serializer[Dict[str, Any]]):
     client_id = serializers.UUIDField()
 
-    def create(self, validated_data: Dict[str, Any]) -> Session:
-        client_id = validated_data["client_id"]
-
-        try:
-            client = Client.objects.get(id=client_id)
-        except Client.DoesNotExist:
-            raise serializers.ValidationError("Client does not exist")
-
-        jwt_jti = str(uuid.uuid4())
-
-        session = Session.objects.create(client=client, jwt_jti=jwt_jti)
-
-        return session
+    # Just validate input, don't create model here!
+    def create(self, validated_data: Dict[str, Any]) -> Dict[str, Any]:
+        # Just return validated data unchanged
+        return validated_data
 
 
 class ConversationSerializer(serializers.ModelSerializer[Conversation]):
@@ -43,5 +32,5 @@ class ConversationSerializer(serializers.ModelSerializer[Conversation]):
         ]
 
 
-class IngestSerializer(serializers.Serializer[Any]):
+class IngestSerializer(serializers.Serializer[Dict[str, Any]]):
     file = serializers.FileField()
