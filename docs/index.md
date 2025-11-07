@@ -1,9 +1,16 @@
-# Aldovale AI Backend
+# Aldovale AI MVP
 
-Aldovale AI is a secure, scalable, and production-grade backend built with **Django**, **DRF**, and **DRF Spectacular**.  
-This documentation covers architecture, environment setup, deployment, and API schema.
+Welcome to the official documentation for **Aldovale AI MVP** — a secure, scalable backend system built with Django and modern DevOps practices.
 
-Use the **API Docs** link below to explore live endpoints.
+## Overview
+This project provides:
+- A RESTful API under `/api/v1/`
+- Secure authentication via JWT/DRF Tokens
+- CI/CD automation with GitHub Actions
+- Modular architecture ready for production scaling
 
-[View API Schema →](/api/v1/docs/redoc/)
-
+### Quick Links
+- [API Documentation](api.md)
+- [Architecture](architecture.md)
+- [Deployment Guide](deployment.md)
+- [DevOps Practices](devops.md)

@@ -1,9 +1,18 @@
-# API Reference
+# API Documentation
 
-The OpenAPI schema for Aldovale AI is auto-generated using **DRF Spectacular**.
+The backend exposes RESTful endpoints under `/api/v1/`.
 
-You can view the live interactive docs at:
-- [Swagger UI](/api/v1/docs/swagger/)
-- [ReDoc](/api/v1/docs/redoc/)
+### Swagger UI
+Available at: [`/api/v1/docs/swagger/`](/api/v1/docs/swagger/)
 
-The static schema is stored in [`docs/openapi-schema.yml`](./openapi-schema.yml).
+### Redoc
+Available at: [`/api/v1/docs/redoc/`](/api/v1/docs/redoc/)
+
+### Authentication
+Supported methods:
+- JWT Tokens
+- DRF Token Authentication
+
+Example:
+```http
+Authorization: Bearer <jwt_token>
