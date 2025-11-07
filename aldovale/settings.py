@@ -15,8 +15,12 @@ IS_PROD = DJANGO_ENV == "production"
 IS_TEST = bool(os.environ.get("PYTEST_CURRENT_TEST"))
 
 SECRET_KEY = os.getenv("SECRET_KEY") or get_random_secret_key()
-DEBUG = True
-ALLOWED_HOSTS: list[str] = []
+DEBUG = os.getenv("DEBUG", "False").lower() in ("true", "1", "t")
+ALLOWED_HOSTS: list[str] = [
+    "localhost",
+    "127.0.0.1",
+    "aldovale-ai-mvp.onrender.com",
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
