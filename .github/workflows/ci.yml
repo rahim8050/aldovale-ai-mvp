@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI Pipeline
 
 on:
   push:
@@ -18,6 +18,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fix git revision warning for MkDocs
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -54,7 +56,6 @@ jobs:
       - name: Security Scan (Bandit)
         run: bandit -r apps -x "apps/tests,apps/*/migrations" --skip B101
 
-
       - name: Run Tests with Coverage
         run: |
           pytest --disable-warnings --cov=apps --cov-report=xml \
@@ -78,47 +79,26 @@ jobs:
       - name: Validate MkDocs Build
         run: mkdocs build --strict
 
-  build-and-deploy:
-    name: Build & Deploy
-    needs: lint-test-build
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && success()
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Cache Docker layers
-        uses: actions/cache@v4
+      # --- Email Notification Section ---
+      - name: Send Email Notification
+        if: always()  # Runs whether build succeeds or fails
+        uses: dawidd6/action-send-mail@v4
         with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
+          server_address: ${{ secrets.SMTP_HOST }}
+          server_port: ${{ secrets.SMTP_PORT }}
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
+          subject: >
+            ✅ CI Passed: ${{ github.repository }} (${{ github.ref_name }}) ||
+            ❌ CI Failed: ${{ github.repository }} (${{ github.ref_name }})
+          body: |
+            Repository: ${{ github.repository }}
+            Branch: ${{ github.ref_name }}
+            Commit: ${{ github.sha }}
+            Actor: ${{ github.actor }}
+            Result: ${{ job.status }}
 
-      - name: Build Docker image
-        run: docker build -t aldovale-ai-mvp:latest .
-
-      - name: Login to Docker Hub
-        if: env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Push Docker image
-        if: env.DOCKER_USERNAME != '' && env.DOCKER_PASSWORD != ''
-        run: |
-          docker tag aldovale-ai-mvp:latest ${DOCKER_USERNAME}/aldovale-ai-mvp:latest
-          docker push ${DOCKER_USERNAME}/aldovale-ai-mvp:latest
-
-      - name: Deploy to Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
-        run: |
-          npm install -g @railway/cli@latest
-          railway up --service aldovale-ai-mvp --ci
+            See details:
+            https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          to: ${{ secrets.NOTIFY_EMAIL }}
+          from: "GitHub CI Bot <${{ secrets.EMAIL_USER }}>"
