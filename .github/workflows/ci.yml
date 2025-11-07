@@ -121,4 +121,4 @@ jobs:
           RAILWAY_PROJECT_ID: ${{ secrets.RAILWAY_PROJECT_ID }}
         run: |
           npm install -g @railway/cli@latest
-          railway up --service aldovale-ai-mvp --yes
+          railway up --service aldovale-ai-mvp --ci
