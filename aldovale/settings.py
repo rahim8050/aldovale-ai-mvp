@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "drf_spectacular_sidecar",
     "apps.core",
+    "apps.chat",
 ]
 
 MIDDLEWARE = [
@@ -127,3 +128,7 @@ SPECTACULAR_SETTINGS = {
 }
 
 STATIC_URL = "/static/"
+
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")

@@ -2,9 +2,11 @@ from rest_framework.decorators import api_view
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import AllowAny
 from apps.core.models import Client, Session
 from apps.core.serializers import SessionCreateSerializer, IngestSerializer
 from rest_framework_simplejwt.tokens import AccessToken
+from rest_framework.decorators import permission_classes
 import hashlib
 import uuid
 from typing import Dict, Any
@@ -19,6 +21,7 @@ def generate_test_jwt_for_client(client: Client) -> str:
 
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def token_exchange(request: Request) -> Response:
     api_key = request.data.get("api_key")
     if not api_key:
