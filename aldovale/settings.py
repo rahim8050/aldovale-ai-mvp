@@ -5,6 +5,7 @@ import dj_database_url
 import pymysql
 from django.core.management.utils import get_random_secret_key
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 pymysql.install_as_MySQLdb()
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -35,6 +36,7 @@ INSTALLED_APPS = [
     "drf_spectacular_sidecar",
     "apps.core",
     "apps.chat",
+    "aldovale_ai",
 ]
 
 MIDDLEWARE = [
@@ -132,3 +134,32 @@ STATIC_URL = "/static/"
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "ollama")
+
+
+def require_env(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise ImproperlyConfigured(f"Missing required environment variable: {name}")
+    return value
+
+
+if os.environ.get("DJANGO_ENV") == "production":
+    EXPECTED_API_KEY = require_env("EXPECTED_API_KEY")
+    JWT_SECRET_KEY = require_env("JWT_SECRET_KEY")
+else:
+    EXPECTED_API_KEY = os.environ.get("EXPECTED_API_KEY", "test-api-key")
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "test-jwt-secret")
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG",
+    },
+}
